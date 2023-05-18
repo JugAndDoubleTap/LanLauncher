@@ -25,19 +25,19 @@ if os.path.isfile('LanLauncher.ini'):
     mw3 = config.get('LanLauncher', 'modernwarfare 3 folder')
 
 else:
-    if os.path.exists(wawtest):
+    if os.path.exists("C:/Program Files (x86)/Steam/steamapps/common/Call of Duty World at War"):
         waw = r"C:/Program Files (x86)/Steam/steamapps/common/Call of Duty World at War"
 
-    if os.path.exists(bo1test):
+    if os.path.exists("C:/Program Files (x86)/Steam/steamapps/common/Call of Duty Black Ops"):
         bo1 = r"C:/Program Files (x86)/Steam/steamapps/common/Call of Duty Black Ops"
 
-    if os.path.exists(bo2test):
+    if os.path.exists("C:/Program Files (x86)/Steam/steamapps/common/Call of Duty Black Ops II"):
         bo2 = r"C:/Program Files (x86)/Steam/steamapps/common/Call of Duty Black Ops II"
 
-    if os.path.exists(mw3test):
+    if os.path.exists("C:/Program Files (x86)/Steam/steamapps/common/Call of Duty Modern Warfare 3"):
         mw3 = r"C:/Program Files (x86)/Steam/steamapps/common/Call of Duty Modern Warfare 3"
         
-    if os.path.exists(r"C:/Users/" + os.getlogin() + r"/AppData/Local/Plutonium"):
+    if os.path.exists("C:/Users/" + os.getlogin() + r"/AppData/Local/Plutonium"):
         plutoniumfold = r"C:/Users/" + os.getlogin() + r"/AppData/Local/Plutonium"
         
     config['LanLauncher'] = {'username': usernamecache,
