@@ -3,7 +3,7 @@ import os
 import subprocess
 import configparser
 
-version_num = "V1.1.2"
+version_num = "V1.1.3"
 
 exe_path = r"\bin\plutonium-bootstrapper-win32.exe"
 usernamecache = r""
