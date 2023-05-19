@@ -3,7 +3,7 @@ import os
 import subprocess
 import configparser
 
-version_num = "V1.1.4"
+version_num = "V1.1.5"
 
 exe_path = r"\bin\plutonium-bootstrapper-win32.exe"
 usernamecache = r""
@@ -65,6 +65,7 @@ layout_main = [ [sg.Text('Username', pad=((0, 0), (0, 0)))],
             [sg.InputText(mw3, key='mw37', pad=((0, 0), (0, 0))), sg.FolderBrowse(key='mw37'), sg.Button('Launch IW5')],
             [sg.Button('Close', pad=((0, 0), (0, 0))), sg.Button('Help'), sg.Text('Made By JugAndDoubleTap', pad=((0, 0), (0, 0))), sg.Text(version_num, pad=((44, 0), (0, 0)))] ]
 
+ 
 def write2config():
     usernamecache = values['usernamecache7']
     plutoniumfold = values['pluto7']
@@ -179,9 +180,9 @@ while (mainwindow == 0):
                         t_arg = "t4mp"
                     if values['multiplayer'] == False:
                         t_arg = "t4sp"
-                    waw = f'"{waw}"'
-                    usernamecache = f'"{usernamecache}"'
-                    p = subprocess.Popen(rf"{plutoniumfold + exe_path} {t_arg} {waw} +name {usernamecache} -lan", cwd=plutoniumfold)
+                    launchwaw = f'"{waw}"'
+                    usernamecachelaunch = f'"{usernamecache}"'
+                    p = subprocess.Popen(rf"{plutoniumfold + exe_path} {t_arg} {launchwaw} +name {usernamecachelaunch} -lan", cwd=plutoniumfold)
                     stdout, stderr = p.communicate()
                 else:
                     error_t4()
@@ -202,9 +203,9 @@ while (mainwindow == 0):
                         t_arg = "t5mp"
                     if values['multiplayer'] == False:
                         t_arg = "t5sp"
-                    bo1 = f'"{bo1}"'
-                    usernamecache = f'"{usernamecache}"'
-                    p = subprocess.Popen(rf"{plutoniumfold + exe_path} {t_arg} {bo1} +name {usernamecache} -lan", cwd=plutoniumfold)
+                    launchbo1 = f'"{bo1}"'
+                    usernamecachelaunch = f'"{usernamecache}"'
+                    p = subprocess.Popen(rf"{plutoniumfold + exe_path} {t_arg} {launchbo1} +name {usernamecachelaunch} -lan", cwd=plutoniumfold)
                     stdout, stderr = p.communicate()
                 else:
                     error_t5()
@@ -225,9 +226,9 @@ while (mainwindow == 0):
                         t_arg = "t6mp"
                     if values['multiplayer'] == False:
                         t_arg = "t6zm"
-                    bo2 = f'"{bo2}"'
-                    usernamecache = f'"{usernamecache}"'
-                    p = subprocess.Popen(rf"{plutoniumfold + exe_path} {t_arg} {bo2} +name {usernamecache} -lan", cwd=plutoniumfold)
+                    launchbo2 = f'"{bo2}"'
+                    usernamecachelaunch = f'"{usernamecache}"'
+                    p = subprocess.Popen(rf"{plutoniumfold + exe_path} {t_arg} {launchbo2} +name {usernamecachelaunch} -lan", cwd=plutoniumfold)
                     stdout, stderr = p.communicate()
                 else:
                     error_t6()
@@ -249,9 +250,9 @@ while (mainwindow == 0):
                   #      t_arg = "iw5mp"
                   #  if values['multiplayer'] == False:
                   #      t_arg = "iw5sp"
-                    mw3 = f'"{mw3}"'
-                    usernamecache = f'"{usernamecache}"'
-                    p = subprocess.Popen(rf"{plutoniumfold + exe_path} {t_arg} {mw3} +name {usernamecache} -lan", cwd=plutoniumfold)
+                    launchmw3 = f'"{mw3}"'
+                    usernamecachelaunch = f'"{usernamecache}"'
+                    p = subprocess.Popen(rf"{plutoniumfold + exe_path} {t_arg} {launchmw3} +name {usernamecachelaunch} -lan", cwd=plutoniumfold)
                     stdout, stderr = p.communicate()
                 else:
                     error_iw5()
