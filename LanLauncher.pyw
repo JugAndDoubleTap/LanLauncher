@@ -3,7 +3,7 @@ import os
 import subprocess
 import configparser
 
-version_num = "V1.1.3"
+version_num = "V1.1.4"
 
 exe_path = r"\bin\plutonium-bootstrapper-win32.exe"
 usernamecache = r""
@@ -51,14 +51,19 @@ else:
         
 sg.set_options(font=('Cambria', 10))
 sg.theme('DarkAmber')
-layout_main = [ 
-            [sg.Text('Username', pad=((0, 1), (0, 0))), sg.InputText(usernamecache, key='usernamecache7', pad=((81, 5), (0, 0))), sg.Radio("Zombies", key='zombies', default=True, group_id='game_mode', pad=((56, 0), (0, 0)))],
-            [sg.Text('Plutonium folder', pad=((0, 1), (0, 0))), sg.InputText(plutoniumfold, key='pluto7', pad=((42, 0), (0, 0))), sg.FolderBrowse(key='pluto7'), sg.Radio("Multiplayer", key='multiplayer', group_id='game_mode', pad=((0, 0), (0, 0)))],
-            [sg.Text('World at War folder', pad=((0, 1), (0, 0))), sg.InputText(waw, key='waw7', pad=((26, 0), (0, 0))), sg.FolderBrowse(key='waw7'), sg.Button('Launch T4')],
-            [sg.Text('Black ops folder  ', pad=((0, 1), (0, 0))), sg.InputText(bo1, key='bo17', pad=((40, 0), (0, 0))), sg.FolderBrowse(key='bo17'), sg.Button('Launch T5')],
-            [sg.Text('Black ops II folder  ', pad=((0, 1), (0, 0))), sg.InputText(bo2, key='bo27', pad=((29, 0), (0, 0))), sg.FolderBrowse(key='bo27'), sg.Button('Launch T6')],
-            [sg.Text('ModernWarfare 3 Folder', pad=((0, 1), (0, 0))), sg.InputText(mw3, key='mw37', pad=((0, 0), (0, 0))), sg.FolderBrowse(key='mw37'), sg.Button('Launch IW5')],
-            [sg.Button('Close', pad=((0, 1), (0, 0))), sg.Button('Help'), sg.Text('Made By JugAndDoubleTap', pad=((54, 0), (0, 0))), sg.Text(version_num, pad=((270, 0), (0, 0)))] ]
+layout_main = [ [sg.Text('Username', pad=((0, 0), (0, 0)))],
+            [sg.InputText(usernamecache, key='usernamecache7', pad=((0, 0), (0, 0))), sg.Radio(r"SP/ZM", key='zombies', default=True, group_id='game_mode', pad=((61, 0), (0, 0)))],
+            [sg.Text('Plutonium folder', pad=((0, 0), (0, 0)))],
+            [sg.InputText(plutoniumfold, key='pluto7', pad=((0, 0), (0, 0))), sg.FolderBrowse(key='pluto7'), sg.Radio("MP", key='multiplayer', group_id='game_mode', pad=((0, 0), (0, 0)))],
+            [sg.Text('World at War folder', pad=((0, 0), (0, 0)))],    
+            [sg.InputText(waw, key='waw7', pad=((0, 0), (0, 0))), sg.FolderBrowse(key='waw7'), sg.Button('Launch T4')],
+            [sg.Text('Black ops folder  ', pad=((0, 0), (0, 0)))],
+            [sg.InputText(bo1, key='bo17', pad=((0, 0), (0, 0))), sg.FolderBrowse(key='bo17'), sg.Button('Launch T5')],
+            [sg.Text('Black ops II folder  ', pad=((0, 0), (0, 0)))],
+            [sg.InputText(bo2, key='bo27', pad=((0, 0), (0, 0))), sg.FolderBrowse(key='bo27'), sg.Button('Launch T6')],
+            [sg.Text('ModernWarfare 3 Folder', pad=((0, 0), (0, 0)))],
+            [sg.InputText(mw3, key='mw37', pad=((0, 0), (0, 0))), sg.FolderBrowse(key='mw37'), sg.Button('Launch IW5')],
+            [sg.Button('Close', pad=((0, 0), (0, 0))), sg.Button('Help'), sg.Text('Made By JugAndDoubleTap', pad=((0, 0), (0, 0))), sg.Text(version_num, pad=((44, 0), (0, 0)))] ]
 
 def write2config():
     usernamecache = values['usernamecache7']
