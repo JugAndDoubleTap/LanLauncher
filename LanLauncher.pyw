@@ -3,14 +3,14 @@ import os
 import subprocess
 import configparser
 
-version_num = "V1.1.5"
+version_num = "V1.1.6"
 
 exe_path = r"\bin\plutonium-bootstrapper-win32.exe"
 usernamecache = r""
 waw = r""
 bo1 = r""
 bo2 = r""
-mw3 = r""
+iw5 = r""
 plutoniumfold = r""
 
 config = configparser.ConfigParser()
@@ -22,7 +22,7 @@ if os.path.isfile('LanLauncher.ini'):
     waw = config.get('LanLauncher', 'world at war folder')
     bo1 = config.get('LanLauncher', 'black ops 1 folder')
     bo2 = config.get('LanLauncher', 'black ops 2 folder')
-    mw3 = config.get('LanLauncher', 'modernwarfare 3 folder')
+    iw5 = config.get('LanLauncher', 'modernwarfare 3 folder')
 
 else:
     if os.path.exists("C:/Program Files (x86)/Steam/steamapps/common/Call of Duty World at War"):
@@ -35,7 +35,7 @@ else:
         bo2 = r"C:/Program Files (x86)/Steam/steamapps/common/Call of Duty Black Ops II"
 
     if os.path.exists("C:/Program Files (x86)/Steam/steamapps/common/Call of Duty Modern Warfare 3"):
-        mw3 = r"C:/Program Files (x86)/Steam/steamapps/common/Call of Duty Modern Warfare 3"
+        iw5 = r"C:/Program Files (x86)/Steam/steamapps/common/Call of Duty Modern Warfare 3"
         
     if os.path.exists("C:/Users/" + os.getlogin() + r"/AppData/Local/Plutonium"):
         plutoniumfold = r"C:/Users/" + os.getlogin() + r"/AppData/Local/Plutonium"
@@ -45,7 +45,7 @@ else:
     'world at war folder': waw,
     'black ops 1 folder': bo1,
     'black ops 2 folder': bo2,
-    'modernwarfare 3 folder': mw3}
+    'modernwarfare 3 folder': iw5}
     with open('LanLauncher.ini', 'w') as configfile:
         config.write(configfile)
         
@@ -62,7 +62,7 @@ layout_main = [ [sg.Text('Username', pad=((0, 0), (0, 0)))],
             [sg.Text('Black ops II folder  ', pad=((0, 0), (0, 0)))],
             [sg.InputText(bo2, key='bo27', pad=((0, 0), (0, 0))), sg.FolderBrowse(key='bo27'), sg.Button('Launch T6')],
             [sg.Text('ModernWarfare 3 Folder', pad=((0, 0), (0, 0)))],
-            [sg.InputText(mw3, key='mw37', pad=((0, 0), (0, 0))), sg.FolderBrowse(key='mw37'), sg.Button('Launch IW5')],
+            [sg.InputText(iw5, key='iw5', pad=((0, 0), (0, 0))), sg.FolderBrowse(key='mw37'), sg.Button('Launch IW5')],
             [sg.Button('Close', pad=((0, 0), (0, 0))), sg.Button('Help'), sg.Text('Made By JugAndDoubleTap', pad=((0, 0), (0, 0))), sg.Text(version_num, pad=((44, 0), (0, 0)))] ]
 
  
@@ -72,13 +72,13 @@ def write2config():
     waw = values['waw7']
     bo1 = values['bo17']
     bo2 = values['bo27']
-    mw3 = values['mw37']
+    mw3 = values['iw5']
     config.read('LanLauncher.ini')
     config.set('LanLauncher', 'username', usernamecache)
     config.set('LanLauncher', 'world at war folder', waw)
     config.set('LanLauncher', 'black ops 1 folder', bo1)
     config.set('LanLauncher', 'black ops 2 folder', bo2)
-    config.set('LanLauncher', 'modernwarfare 3 folder', mw3)
+    config.set('LanLauncher', 'modernwarfare 3 folder', iw5)
     config.set('LanLauncher', 'plutonium folder', plutoniumfold)
     with open('LanLauncher.ini', 'w') as configfile2:
         config.write(configfile2)
@@ -170,18 +170,20 @@ while (mainwindow == 0):
  
     if event == 'Launch T4':
         write2config()
-        if usernamecache != "":
+        if values['usernamecache7'] != "":
             
-            if os.path.exists(plutoniumfold + "/bin/plutonium-bootstrapper-win32.exe"):
+            if os.path.exists(values['pluto7'] + "/bin/plutonium-bootstrapper-win32.exe"):
                 
-                if os.path.isfile(waw + "/main/iw_00.iwd"):
+                if os.path.isfile(values['waw7'] + "/main/iw_00.iwd"):
                     
                     if values['multiplayer'] == True:
                         t_arg = "t4mp"
                     if values['multiplayer'] == False:
                         t_arg = "t4sp"
-                    launchwaw = f'"{waw}"'
-                    usernamecachelaunch = f'"{usernamecache}"'
+                    waw = values['waw7']
+                    usernamecache = values['usernamecache7']
+                    launchwaw = fr'"{waw}"'
+                    usernamecachelaunch = fr'"{usernamecache}"'
                     p = subprocess.Popen(rf"{plutoniumfold + exe_path} {t_arg} {launchwaw} +name {usernamecachelaunch} -lan", cwd=plutoniumfold)
                     stdout, stderr = p.communicate()
                 else:
@@ -193,18 +195,20 @@ while (mainwindow == 0):
             
     elif event == 'Launch T5':
         write2config()
-        if usernamecache != "":
+        if values['usernamecache7'] != "":
             
-            if os.path.exists(plutoniumfold + "/bin/plutonium-bootstrapper-win32.exe"):
+            if os.path.exists(values['pluto7'] + "/bin/plutonium-bootstrapper-win32.exe"):
                 
-                if os.path.isfile(waw + "/main/iw_00.iwd"):
+                if os.path.isfile(values['bo17'] + "/main/iw_00.iwd"):
                     
                     if values['multiplayer'] == True:
                         t_arg = "t5mp"
                     if values['multiplayer'] == False:
                         t_arg = "t5sp"
-                    launchbo1 = f'"{bo1}"'
-                    usernamecachelaunch = f'"{usernamecache}"'
+                    bo1 = values['bo17']
+                    usernamecache = values['usernamecache7']
+                    launchbo1 = fr'"{bo1}"'
+                    usernamecachelaunch = fr'"{usernamecache}"'
                     p = subprocess.Popen(rf"{plutoniumfold + exe_path} {t_arg} {launchbo1} +name {usernamecachelaunch} -lan", cwd=plutoniumfold)
                     stdout, stderr = p.communicate()
                 else:
@@ -216,18 +220,20 @@ while (mainwindow == 0):
         
     elif event == 'Launch T6':
         write2config()
-        if usernamecache != "":
+        if values['usernamecache7'] != "":
             
-            if os.path.exists(plutoniumfold + "/bin/plutonium-bootstrapper-win32.exe"):
+            if os.path.exists(values['pluto7'] + "/bin/plutonium-bootstrapper-win32.exe"):
                 
-                if os.path.isfile(bo2 + "/zone/all/base.ipak"):
+                if os.path.isfile(values['bo27'] + "/zone/all/base.ipak"):
                     
                     if values['multiplayer'] == True:
                         t_arg = "t6mp"
                     if values['multiplayer'] == False:
                         t_arg = "t6zm"
-                    launchbo2 = f'"{bo2}"'
-                    usernamecachelaunch = f'"{usernamecache}"'
+                    bo2 = values['bo27']
+                    usernamecache = values['usernamecache7']
+                    launchbo2 = fr'"{bo2}"'
+                    usernamecachelaunch = fr'"{usernamecache}"'
                     p = subprocess.Popen(rf"{plutoniumfold + exe_path} {t_arg} {launchbo2} +name {usernamecachelaunch} -lan", cwd=plutoniumfold)
                     stdout, stderr = p.communicate()
                 else:
@@ -240,19 +246,21 @@ while (mainwindow == 0):
 
     elif event == 'Launch IW5':
         write2config()
-        if usernamecache != "":
+        if values['usernamecache7'] != "":
             
-            if os.path.exists(plutoniumfold + "/bin/plutonium-bootstrapper-win32.exe"):
+            if os.path.exists(values['pluto7'] + "/bin/plutonium-bootstrapper-win32.exe"):
                 
-                if os.path.isfile(waw + "/main/iw_00.iwd"):
+                if os.path.isfile(values['iw5'] + "/main/iw_00.iwd"):
                     t_arg = "iw5mp"
                   #  if values['multiplayer'] == True:
                   #      t_arg = "iw5mp"
                   #  if values['multiplayer'] == False:
                   #      t_arg = "iw5sp"
-                    launchmw3 = f'"{mw3}"'
-                    usernamecachelaunch = f'"{usernamecache}"'
-                    p = subprocess.Popen(rf"{plutoniumfold + exe_path} {t_arg} {launchmw3} +name {usernamecachelaunch} -lan", cwd=plutoniumfold)
+                    iw5 = values['iw5']
+                    usernamecache = values['usernamecache7']
+                    launchiw5 = fr'"{iw5}"'
+                    usernamecachelaunch = fr'"{usernamecache}"'
+                    p = subprocess.Popen(rf"{plutoniumfold + exe_path} {t_arg} {launchiw5} +name {usernamecachelaunch} -lan", cwd=plutoniumfold)
                     stdout, stderr = p.communicate()
                 else:
                     error_iw5()
