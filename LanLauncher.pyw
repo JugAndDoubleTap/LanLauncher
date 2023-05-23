@@ -3,7 +3,7 @@ import os
 import subprocess
 import configparser
 
-version_num = "V1.1.6"
+version_num = "V1.1.7"
 
 exe_path = r"\bin\plutonium-bootstrapper-win32.exe"
 usernamecache = r""
@@ -72,7 +72,7 @@ def write2config():
     waw = values['waw7']
     bo1 = values['bo17']
     bo2 = values['bo27']
-    mw3 = values['iw5']
+    iw5 = values['iw5']
     config.read('LanLauncher.ini')
     config.set('LanLauncher', 'username', usernamecache)
     config.set('LanLauncher', 'world at war folder', waw)
