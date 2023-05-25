@@ -1,9 +1,12 @@
 import PySimpleGUI as sg
-import os
-import subprocess
 import configparser
+import subprocess
+import wget
+import sys
+import os
 
-version_num = "V1.1.7"
+version_num = r"1.1.8"
+update_num = r"0"
 
 exe_path = r"\bin\plutonium-bootstrapper-win32.exe"
 usernamecache = r""
@@ -14,6 +17,11 @@ iw5 = r""
 plutoniumfold = r""
 
 config = configparser.ConfigParser()
+
+
+
+
+
 
 if os.path.isfile('LanLauncher.ini'):
     config.read('LanLauncher.ini')
@@ -49,11 +57,14 @@ else:
     with open('LanLauncher.ini', 'w') as configfile:
         config.write(configfile)
         
+
+
+        
 sg.set_options(font=('Cambria', 10))
 sg.theme('DarkAmber')
 layout_main = [ [sg.Text('Username', pad=((0, 0), (0, 0)))],
             [sg.InputText(usernamecache, key='usernamecache7', pad=((0, 0), (0, 0))), sg.Radio(r"SP/ZM", key='zombies', default=True, group_id='game_mode', pad=((61, 0), (0, 0)))],
-            [sg.Text('Plutonium folder', pad=((0, 0), (0, 0)))],
+            [sg.Text('Plutonium folder (AppData)', pad=((0, 0), (0, 0)))],
             [sg.InputText(plutoniumfold, key='pluto7', pad=((0, 0), (0, 0))), sg.FolderBrowse(key='pluto7'), sg.Radio("MP", key='multiplayer', group_id='game_mode', pad=((0, 0), (0, 0)))],
             [sg.Text('World at War folder', pad=((0, 0), (0, 0)))],    
             [sg.InputText(waw, key='waw7', pad=((0, 0), (0, 0))), sg.FolderBrowse(key='waw7'), sg.Button('Launch T4')],
@@ -61,9 +72,9 @@ layout_main = [ [sg.Text('Username', pad=((0, 0), (0, 0)))],
             [sg.InputText(bo1, key='bo17', pad=((0, 0), (0, 0))), sg.FolderBrowse(key='bo17'), sg.Button('Launch T5')],
             [sg.Text('Black ops II folder  ', pad=((0, 0), (0, 0)))],
             [sg.InputText(bo2, key='bo27', pad=((0, 0), (0, 0))), sg.FolderBrowse(key='bo27'), sg.Button('Launch T6')],
-            [sg.Text('ModernWarfare 3 Folder', pad=((0, 0), (0, 0)))],
+            [sg.Text('ModernWarfare 3 folder', pad=((0, 0), (0, 0)))],
             [sg.InputText(iw5, key='iw5', pad=((0, 0), (0, 0))), sg.FolderBrowse(key='mw37'), sg.Button('Launch IW5')],
-            [sg.Button('Close', pad=((0, 0), (0, 0))), sg.Button('Help'), sg.Text('Made By JugAndDoubleTap', pad=((0, 0), (0, 0))), sg.Text(version_num, pad=((44, 0), (0, 0)))] ]
+            [sg.Button('Close'), sg.Button('Update'), sg.Button('Help'), sg.Text('Made By JugAndDoubleTap', pad=((0, 0), (0, 0))), sg.Text('V' + version_num, pad=((30, 0), (0, 0)))] ]
 
  
 def write2config():
@@ -159,12 +170,53 @@ def error_name():
         if event == sg.WIN_CLOSED or event == 'Close':
             error6 += 1
             window_name.close()
+            sys.exit()
+
+def update_winfunc():
+    try:
+        wget.download(r"https://raw.githubusercontent.com/JugAndDoubleTap/LanLauncher/main/update.ini")
+        config.read('update.ini')
+        update_num = config.get('Update', 'update number')
+    except Exception:
+        updatetext = "Could not check for latest version."
+
+    if version_num < update_num:
+        updatetext = f'An update is available,\nwould you like to update to version {update_num}?'
+        updatewinlay = [[sg.Text(updatetext)],
+                        [sg.Button('Cancel'), sg.Button('Update')]]
+    elif version_num >= update_num:
+        updatetext = 'There are currently no updates.'
+        updatewinlay = [[sg.Text(updatetext)],
+                        [sg.Button('Close')]]
+
+    update_win = sg.Window("LanLauncher", updatewinlay)
+    mainwindow = 0
+    update = 0
+    while update == 0:
+        event, values = update_win.read()
+        if event == 'Close':
+            os.remove('update.ini')
+            update += 1
+            update_win.close()
+        elif event == sg.WIN_CLOSED or event == 'Cancel':
+            os.remove('update.ini')
+            update += 1
+            update_win.close()
+        elif event == 'Update':
+            os.remove('update.ini')
+            write2config()
+            update += 1
+            update_win.close()
+            mainwindow += 1
+            window_main.close()
+            subprocess.Popen('LLUpdater.exe', shell=True)
+            sys.exit()
 
 window_main = sg.Window('LanLauncher', layout_main, icon=('LAN.ico'))
 mainwindow = 0
 while (mainwindow == 0):
     event, values = window_main.read()
-    if event == sg.WIN_CLOSED or event == 'Close':
+    if event == sg.WIN_CLOSED:
         mainwindow += 1
         window_main.close()
  
@@ -271,3 +323,12 @@ while (mainwindow == 0):
             
     elif event == 'Help':
         helpwin()
+        
+    elif event == 'Update':
+        update_winfunc()
+
+    elif event == 'Close':
+        write2config()
+        mainwindow += 1
+        window_main.close()
+        sys.exit()
