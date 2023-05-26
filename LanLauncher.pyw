@@ -6,7 +6,6 @@ import sys
 import os
 
 version_num = r"1.1.8"
-update_num = r"0"
 
 exe_path = r"\bin\plutonium-bootstrapper-win32.exe"
 usernamecache = r""
@@ -173,35 +172,44 @@ def error_name():
             sys.exit()
 
 def update_winfunc():
+    updatetext = 'There is no more updates available currently.'
+    update_num = r"0"
     try:
         wget.download(r"https://raw.githubusercontent.com/JugAndDoubleTap/LanLauncher/main/update.ini")
         config.read('update.ini')
         update_num = config.get('Update', 'update number')
     except Exception:
-        updatetext = "Could not check for latest version."
+        updatetext = 'Could not check for latest version.'
 
     if version_num < update_num:
         updatetext = f'An update is available,\nwould you like to update to version {update_num}?'
         updatewinlay = [[sg.Text(updatetext)],
                         [sg.Button('Cancel'), sg.Button('Update')]]
     elif version_num >= update_num:
-        updatetext = 'There are currently no updates.'
         updatewinlay = [[sg.Text(updatetext)],
                         [sg.Button('Close')]]
 
-    update_win = sg.Window("LanLauncher", updatewinlay)
+    update_win = sg.Window("LanLauncher", updatewinlay, icon=('LAN.ico'))
     mainwindow = 0
     update = 0
     while update == 0:
         event, values = update_win.read()
         if event == 'Close':
-            os.remove('update.ini')
-            update += 1
-            update_win.close()
+            try:
+                os.remove('update.ini')
+                update += 1
+                update_win.close()
+            except Exception:
+                update += 1
+                update_win.close()
         elif event == sg.WIN_CLOSED or event == 'Cancel':
-            os.remove('update.ini')
-            update += 1
-            update_win.close()
+            try:
+                os.remove('update.ini')
+                update += 1
+                update_win.close()
+            except Exception:
+                update += 1
+                update_win.close()
         elif event == 'Update':
             os.remove('update.ini')
             write2config()
