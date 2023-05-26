@@ -228,7 +228,7 @@ while (mainwindow == 0):
         mainwindow += 1
         window_main.close()
  
-    if event == 'Launch T4':
+    elif event == 'Launch T4':
         write2config()
         if values['usernamecache7'] != "":
             
