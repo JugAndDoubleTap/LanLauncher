@@ -1,8 +1,6 @@
-import PySimpleGUI as sg
-import subprocess
-import wget
-import sys
-import os
+import FreeSimpleGUI as sg
+import subprocess, wget, sys, os
+
 
 errorvar = 0
 

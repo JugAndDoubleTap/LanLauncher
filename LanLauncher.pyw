@@ -1,342 +1,322 @@
-import PySimpleGUI as sg
-import configparser
-import subprocess
-import wget
-import sys
-import os
+import subprocess, os, shutil, argparse, configparser, glob, wget
+import LLWindows as LLW
+import LLGameStarter as LLG
 
-version_num = r"1.1.8"
+def main():
+    # sets up argument parser for commandline argument usage
+    parser = argparse.ArgumentParser(description='LanLauncher, for when you want to launch plutonium without an active internet connection!')
+    parser.add_argument('-name', type=str, help='username that you will use example: "JugAndDoubleTap",  default is the one you set in the GUI', default=None)
+    parser.add_argument('-plutoniumdir', type=str, help='location at which your plutonium folder is stored example: "C:/user/(name)/appdata/local/plutonium", by default uses the one that was set in the GUI, Must be used with -nogui', default=None)
+    parser.add_argument('-mode', type=str, help='mode selector, either input "MP" or "ZM", MUST be used with -nogui', default="ZM")
+    parser.add_argument('-gamedir', type=str, help='location at which your game is stored example: "C:/games/cod world at war", by default uses the one that was set in the GUI, MUST be used with -nogui', default=None)
+    parser.add_argument('-gameid', type=str, help='accepts game id to set the game, such as T4, T5, T6, IW5, MUST be used with -nogui', default=None)
+    parser.add_argument('-nogui', action='store_true', help='launches with no gui')
+    args = parser.parse_args()
 
-exe_path = r"\bin\plutonium-bootstrapper-win32.exe"
-usernamecache = r""
-waw = r""
-bo1 = r""
-bo2 = r""
-iw5 = r""
-plutoniumfold = r""
+    # dictionary of all settings variable names, to use as enums for array indexing
+    GENERAL = {
+        "VERSIONNUM" : 0,
+        "THEME" : 1,
+        "USERNAME" : 2,
+        "PLUTONIUMINSTANCE" : 3,
+        "WAW" : 4,
+        "BO1" : 5,
+        "BO2" : 6, 
+        "MW3" : 7,
+        "MODID" : 8,
+        "GAMEID" : 9,
+        "SERVERID" : 10,
+        "MODEID" : 11,
+        "NOGUI" : 12,
+        "WAWSERVMULT" : 13,
+        "ACTIVEGAME" : 14
+    }
+    # initilizes array size based on dictionary, and sets all indexes to '' (empty) to start off
+    settings = [''] * len(GENERAL)
 
-config = configparser.ConfigParser()
+    # assigning items to array index via dictionary example for me
+    #settingsArray[GENERAL["WAW"]] = "/games/general/waw/"
+    #print(settingsArray[GENERAL["WAW"]])
+    # output : /games/general/waw/
+    
+    # sets the version number
+    settings[GENERAL["VERSIONNUM"]] = "2.0.0"
+    # sets default theme
+    settings[GENERAL["THEME"]] = "DarkAmber"
 
 
+    if os.path.isfile("LanLauncher.ini"):
+        # load cfg function
+        LoadFromINI(GENERAL, settings)
 
+    # this is only used when PLUTONIUMINSTANCE is not set, such as when running for the first time, or if it is deleted from the ini
+    if settings[GENERAL["PLUTONIUMINSTANCE"]] == '':
+        # sets the plutonium instance to the default installation location for plutonium if PLUTONIUMINSTANCE is Null
+        if os.path.exists(r"C:/Users/" + os.getlogin() + r"/AppData/Local/Plutonium"):
+           settings[GENERAL["PLUTONIUMINSTANCE"]] = r"C:/Users/" + os.getlogin() + r"/AppData/Local/Plutonium"
 
+    if args.nogui == False:
+        # normal launch
+        LLW.MainWindow(GENERAL, settings)
+    else:
+        # no gui launch
+        settings[GENERAL["NOGUI"]] = "True"
 
+        # if a custom location to a plutonium instance is provided in the cmd args then this is used 
+        if args.plutoniumdir != None:
+            settings[GENERAL["PLUTONIUMINSTANCE"]] = args.plutoniumdir
+        # if a name is provided using commandline arguments then this is used
+        if args.name != None:
+            settings[GENERAL["USERNAME"]] = args.name
+        match args.gameid.upper():
+            case "T4":
+                if args.mode.upper() == "MP":
+                    settings[GENERAL["MODEID"]] = "t4mp"
+                else:
+                     settings[GENERAL["MODEID"]] = "t4sp"
 
-if os.path.isfile('LanLauncher.ini'):
-    config.read('LanLauncher.ini')
-    usernamecache = config.get('LanLauncher', 'username')
-    plutoniumfold = config.get('LanLauncher', 'plutonium folder')
-    waw = config.get('LanLauncher', 'world at war folder')
-    bo1 = config.get('LanLauncher', 'black ops 1 folder')
-    bo2 = config.get('LanLauncher', 'black ops 2 folder')
-    iw5 = config.get('LanLauncher', 'modernwarfare 3 folder')
+                settings[GENERAL["GAMEID"]] = "World at War"
+                # sets gamedir if a custom location is provdied
+                if args.gamedir != None:
+                    settings[GENERAL["WAW"]] = args.gamedir
+                LLG.Launch(GENERAL, settings, '')
+            case "T5":
+                if args.mode.upper() == "MP":
+                    settings[GENERAL["MODEID"]] = "t5mp"
+                else:
+                    settings[GENERAL["MODEID"]] = "t5sp"
+                
+                settings[GENERAL["GAMEID"]] = "Black ops"
+                # sets gamedir if a custom location is provdied
+                if args.gamedir != None:
+                    settings[GENERAL["BO1"]] = args.gamedir
+                LLG.Launch(GENERAL, settings, '')
+            case "T6":
+                if args.mode.upper() == "MP":
+                    settings[GENERAL["MODEID"]] = "t6mp"
+                else:
+                    settings[GENERAL["MODEID"]] = "t6zm"
 
-else:
-    if os.path.exists("C:/Program Files (x86)/Steam/steamapps/common/Call of Duty World at War"):
-        waw = r"C:/Program Files (x86)/Steam/steamapps/common/Call of Duty World at War"
-
-    if os.path.exists("C:/Program Files (x86)/Steam/steamapps/common/Call of Duty Black Ops"):
-        bo1 = r"C:/Program Files (x86)/Steam/steamapps/common/Call of Duty Black Ops"
-
-    if os.path.exists("C:/Program Files (x86)/Steam/steamapps/common/Call of Duty Black Ops II"):
-        bo2 = r"C:/Program Files (x86)/Steam/steamapps/common/Call of Duty Black Ops II"
-
-    if os.path.exists("C:/Program Files (x86)/Steam/steamapps/common/Call of Duty Modern Warfare 3"):
-        iw5 = r"C:/Program Files (x86)/Steam/steamapps/common/Call of Duty Modern Warfare 3"
+                settings[GENERAL["GAMEID"]] = "Black ops II"
+                # sets gamedir if a custom location is provdied
+                if args.gamedir != None:
+                    settings[GENERAL["BO2"]] = args.gamedir
+                LLG.Launch(GENERAL, settings, '')
+            case "IW5":
+                settings[GENERAL["MODEID"]] = "iw5mp"
+                settings[GENERAL["GAMEID"]] = "Modern Warfare 3"
+                # sets gamedir if a custom location is provdied
+                if args.gamedir != None:
+                    settings[GENERAL["MW3"]] = args.gamedir
+                LLG.Launch(GENERAL, settings, '')
+            case _:
+                print("No valid game selected.")
         
-    if os.path.exists("C:/Users/" + os.getlogin() + r"/AppData/Local/Plutonium"):
-        plutoniumfold = r"C:/Users/" + os.getlogin() + r"/AppData/Local/Plutonium"
-        
-    config['LanLauncher'] = {'username': usernamecache,
-    'plutonium folder': plutoniumfold,
-    'world at war folder': waw,
-    'black ops 1 folder': bo1,
-    'black ops 2 folder': bo2,
-    'modernwarfare 3 folder': iw5}
-    with open('LanLauncher.ini', 'w') as configfile:
-        config.write(configfile)
-        
+
+def SaveToINI(GENERAL, settings, values):
+        config = configparser.ConfigParser()
+
+        if not os.path.isfile("LanLauncher.ini"):
+            config['LanLauncher'] = {'username': str(values["username"]),
+            'plutonium folder': str(values["plutoniuminstance"]),
+            'world at war folder': str(values["waw"]),
+            'black ops 1 folder': str(values["bo1"]),
+            'black ops 2 folder': str(values["bo2"]),
+            'modernwarfare 3 folder': str(values["mw3"]),
+            'theme': settings[GENERAL["THEME"]]}
+            with open('LanLauncher.ini', 'w') as INIFILE:
+                config.write(INIFILE)
+        else:
+            config.read('LanLauncher.ini')
+            config.set('LanLauncher', 'username', str(values["username"]))
+            config.set('LanLauncher', 'world at war folder', str(values["waw"]))
+            config.set('LanLauncher', 'black ops 1 folder', str(values["bo1"]))
+            config.set('LanLauncher', 'black ops 2 folder', str(values["bo2"]))
+            config.set('LanLauncher', 'modernwarfare 3 folder', str(values["mw3"]))
+            config.set('LanLauncher', 'plutonium folder', str(values["plutoniuminstance"]))
+            config.set('LanLauncher', 'theme', settings[GENERAL["THEME"]])
+            with open('LanLauncher.ini', 'w') as INIFILE:
+                config.write(INIFILE)
+
+def LoadFromINI(GENERAL, settings):
+        config = configparser.ConfigParser()
+
+        config.read('LanLauncher.ini')
+        try:
+            settings[GENERAL["USERNAME"]] = config.get('LanLauncher', 'username')
+        except Exception as e:
+            print(e)
+            config.set('LanLauncher', 'username', settings[GENERAL["USERNAME"]])
+        try:
+            settings[GENERAL["PLUTONIUMINSTANCE"]] = config.get('LanLauncher', 'plutonium folder')
+        except Exception as e:
+            print(e)
+            config.set('LanLauncher', 'plutonium folder', settings[GENERAL["PLUTONIUMINSTANCE"]])
+        try:
+            settings[GENERAL["WAW"]] = config.get('LanLauncher', 'world at war folder')
+        except Exception as e:
+            print(e)
+            config.set('LanLauncher', 'world at war folder', settings[GENERAL["WAW"]])
+        try:
+            settings[GENERAL["BO1"]] = config.get('LanLauncher', 'black ops 1 folder')
+        except Exception as e:
+            print(e)
+            config.set('LanLauncher', 'black ops 1 folder', settings[GENERAL["BO1"]])
+        try:
+            settings[GENERAL["BO2"]] = config.get('LanLauncher', 'black ops 2 folder')
+        except Exception as e:
+            print(e)
+            config.set('LanLauncher', 'black ops 2 folder', settings[GENERAL["BO2"]])
+        try:
+            settings[GENERAL["MW3"]] = config.get('LanLauncher', 'modernwarfare 3 folder')
+        except Exception as e:
+            print(e)
+            config.set('LanLauncher', 'modernwarfare 3 folder', settings[GENERAL["MW3"]])
+        try:
+            settings[GENERAL["THEME"]] = config.get('LanLauncher', 'theme')
+        except Exception as e:
+            print(e)
+            config.set('LanLauncher', 'theme', settings[GENERAL["THEME"]])
 
 
-        
-sg.set_options(font=('Cambria', 10))
-sg.theme('DarkAmber')
-layout_main = [ [sg.Text('Username', pad=((0, 0), (0, 0)))],
-            [sg.InputText(usernamecache, key='usernamecache7', pad=((0, 0), (0, 0))), sg.Radio(r"SP/ZM", key='zombies', default=True, group_id='game_mode', pad=((61, 0), (0, 0)))],
-            [sg.Text('Plutonium folder (AppData)', pad=((0, 0), (0, 0)))],
-            [sg.InputText(plutoniumfold, key='pluto7', pad=((0, 0), (0, 0))), sg.FolderBrowse(key='pluto7'), sg.Radio("MP", key='multiplayer', group_id='game_mode', pad=((0, 0), (0, 0)))],
-            [sg.Text('World at War folder', pad=((0, 0), (0, 0)))],    
-            [sg.InputText(waw, key='waw7', pad=((0, 0), (0, 0))), sg.FolderBrowse(key='waw7'), sg.Button('Launch T4')],
-            [sg.Text('Black ops folder  ', pad=((0, 0), (0, 0)))],
-            [sg.InputText(bo1, key='bo17', pad=((0, 0), (0, 0))), sg.FolderBrowse(key='bo17'), sg.Button('Launch T5')],
-            [sg.Text('Black ops II folder  ', pad=((0, 0), (0, 0)))],
-            [sg.InputText(bo2, key='bo27', pad=((0, 0), (0, 0))), sg.FolderBrowse(key='bo27'), sg.Button('Launch T6')],
-            [sg.Text('ModernWarfare 3 folder', pad=((0, 0), (0, 0)))],
-            [sg.InputText(iw5, key='iw5', pad=((0, 0), (0, 0))), sg.FolderBrowse(key='mw37'), sg.Button('Launch IW5')],
-            [sg.Button('Close'), sg.Button('Update'), sg.Button('Help'), sg.Text('Made By JugAndDoubleTap', pad=((0, 0), (0, 0))), sg.Text('V' + version_num, pad=((30, 0), (0, 0)))] ]
+def ExtractArchive(modfolder, mapexe):
+    fourLetterExtension = mapexe[-4:]
+    threeLetterExtension = mapexe[-3:]
 
- 
-def write2config():
-    usernamecache = values['usernamecache7']
-    plutoniumfold = values['pluto7']
-    waw = values['waw7']
-    bo1 = values['bo17']
-    bo2 = values['bo27']
-    iw5 = values['iw5']
-    config.read('LanLauncher.ini')
-    config.set('LanLauncher', 'username', usernamecache)
-    config.set('LanLauncher', 'world at war folder', waw)
-    config.set('LanLauncher', 'black ops 1 folder', bo1)
-    config.set('LanLauncher', 'black ops 2 folder', bo2)
-    config.set('LanLauncher', 'modernwarfare 3 folder', iw5)
-    config.set('LanLauncher', 'plutonium folder', plutoniumfold)
-    with open('LanLauncher.ini', 'w') as configfile2:
-        config.write(configfile2)
-       
-def helpwin():
-    layout_help = [ [sg.Text('The folder refers to the location at which your game is installed.\nFor example, if you have it installed to C:/games/pluto_t6_fullgame\nThen that is what you would either type or browse for.')],
-    [sg.Button('Close')]]
-    window_help = sg.Window('LanLauncher', layout_help, icon=('LAN.ico'))
-    helpa = 0
-    while (helpa == 0):
-        event, values = window_help.read()
-        if event == sg.WIN_CLOSED or event == 'Close':
-            helpa += 1
-            window_help.close()
 
-def error_pluto():
-    layout_pluto = [ [sg.Text('The selection in field "Plutonium folder" does not contain valid\nPlutonium launcher data.')],
-    [sg.Button('Close')]]
-    window_pluto = sg.Window('LanLauncher', layout_pluto, icon=('LAN.ico'))
-    error1 = 0
-    while (error1 == 0):
-        event, values = window_pluto.read()
-        if event == sg.WIN_CLOSED or event == 'Close':
-            error1 += 1
-            window_pluto.close()
-
-def error_t4():
-    layout_t4 = [ [sg.Text('The selection in field "World at war folder" does not contain valid\nWorld at War game data.')],
-    [sg.Button('Close')]]
-    window_t4 = sg.Window('LanLauncher', layout_t4, icon=('LAN.ico'))
-    error2 = 0
-    while (error2 == 0):
-        event, values = window_t4.read()
-        if event == sg.WIN_CLOSED or event == 'Close':
-            error2 += 1
-            window_t4.close()
-
-def error_t5():
-    layout_t5 = [ [sg.Text('The selection in field "Black ops folder" does not contain valid\nBlack ops game data.')],
-    [sg.Button('Close')]]
-    window_t5 = sg.Window('LanLauncher', layout_t5, icon=('LAN.ico'))
-    error3 = 0
-    while (error3 == 0):
-        event, values = window_t5.read()
-        if event == sg.WIN_CLOSED or event == 'Close':
-            error3 += 1
-            window_t5.close()
-
-def error_t6():
-    layout_t6 = [ [sg.Text('The selection in field "Black ops II folder" does not contain valid\nBlack ops II game data.')],
-    [sg.Button('Close')]]
-    window_t6 = sg.Window('LanLauncher', layout_t6, icon=('LAN.ico'))
-    error4 = 0
-    while (error4 == 0):
-        event, values = window_t6.read()
-        if event == sg.WIN_CLOSED or event == 'Close':
-            error4 += 1
-            window_t6.close()
-
-def error_iw5():
-    layout_iw5 = [ [sg.Text('The selection in field "ModernWarfare 3 folder" does not contain valid\nModern Warfare 3 game data.')],
-    [sg.Button('Close')]]
-    window_iw5 = sg.Window('LanLauncher', layout_iw5, icon=('LAN.ico'))
-    error5 = 0
-    while (error5 == 0):
-        event, values = window_iw5.read()
-        if event == sg.WIN_CLOSED or event == 'Close':
-            error5 += 1
-            window_iw5.close()
-
-def error_name():
-    layout_name = [ [sg.Text('The username you selected is invalid.')],
-    [sg.Button('Close')]]
-    window_name = sg.Window('LanLauncher', layout_name, icon=('LAN.ico'))
-    error6 = 0
-    while (error6 == 0):
-        event, values = window_name.read()
-        if event == sg.WIN_CLOSED or event == 'Close':
-            error6 += 1
-            window_name.close()
-            sys.exit()
-
-def update_winfunc():
-    updatetext = 'There is no more updates available currently.'
-    update_num = r"0"
+    if threeLetterExtension.lower() == ".7z":
+        fileName = mapexe[:-3]
+    else:
+        match fourLetterExtension.lower():
+            case ".zip":
+                fileName = os.path.basename(mapexe)[:-4]
+            case ".rar":
+                fileName = os.path.basename(mapexe)[:-4]
+            case ".exe":
+                fileName = os.path.basename(mapexe)[:-4]
+            case _:
+                return "not supported extension"
     try:
-        wget.download(r"https://raw.githubusercontent.com/JugAndDoubleTap/LanLauncher/main/update.ini")
-        config.read('update.ini')
-        update_num = config.get('Update', 'update number')
-    except Exception:
-        updatetext = 'Could not check for latest version.'
-
-    if version_num < update_num:
-        updatetext = f'An update is available,\nwould you like to update to version {update_num}?'
-        updatewinlay = [[sg.Text(updatetext)],
-                        [sg.Button('Cancel'), sg.Button('Update')]]
-    elif version_num >= update_num:
-        updatewinlay = [[sg.Text(updatetext)],
-                        [sg.Button('Close')]]
-
-    update_win = sg.Window("LanLauncher", updatewinlay, icon=('LAN.ico'))
-    mainwindow = 0
-    update = 0
-    while update == 0:
-        event, values = update_win.read()
-        if event == 'Close':
-            try:
-                os.remove('update.ini')
-                update += 1
-                update_win.close()
-            except Exception:
-                update += 1
-                update_win.close()
-        elif event == sg.WIN_CLOSED or event == 'Cancel':
-            try:
-                os.remove('update.ini')
-                update += 1
-                update_win.close()
-            except Exception:
-                update += 1
-                update_win.close()
-        elif event == 'Update':
-            os.remove('update.ini')
-            write2config()
-            update += 1
-            update_win.close()
-            mainwindow += 1
-            window_main.close()
-            subprocess.Popen('LLUpdater.exe', shell=True)
-            sys.exit()
-
-window_main = sg.Window('LanLauncher', layout_main, icon=('LAN.ico'))
-mainwindow = 0
-while (mainwindow == 0):
-    event, values = window_main.read()
-    if event == sg.WIN_CLOSED:
-        mainwindow += 1
-        window_main.close()
- 
-    elif event == 'Launch T4':
-        write2config()
-        if values['usernamecache7'] != "":
-            
-            if os.path.exists(values['pluto7'] + "/bin/plutonium-bootstrapper-win32.exe"):
-                
-                if os.path.isfile(values['waw7'] + "/main/iw_00.iwd"):
-                    
-                    if values['multiplayer'] == True:
-                        t_arg = "t4mp"
-                    if values['multiplayer'] == False:
-                        t_arg = "t4sp"
-                    waw = values['waw7']
-                    usernamecache = values['usernamecache7']
-                    launchwaw = fr'"{waw}"'
-                    usernamecachelaunch = fr'"{usernamecache}"'
-                    p = subprocess.Popen(rf"{plutoniumfold + exe_path} {t_arg} {launchwaw} +name {usernamecachelaunch} -lan", cwd=plutoniumfold)
-                    stdout, stderr = p.communicate()
-                else:
-                    error_t4()
-            else:
-                error_pluto()
-        else:
-            error_name()
-            
-    elif event == 'Launch T5':
-        write2config()
-        if values['usernamecache7'] != "":
-            
-            if os.path.exists(values['pluto7'] + "/bin/plutonium-bootstrapper-win32.exe"):
-                
-                if os.path.isfile(values['bo17'] + "/main/iw_00.iwd"):
-                    
-                    if values['multiplayer'] == True:
-                        t_arg = "t5mp"
-                    if values['multiplayer'] == False:
-                        t_arg = "t5sp"
-                    bo1 = values['bo17']
-                    usernamecache = values['usernamecache7']
-                    launchbo1 = fr'"{bo1}"'
-                    usernamecachelaunch = fr'"{usernamecache}"'
-                    p = subprocess.Popen(rf"{plutoniumfold + exe_path} {t_arg} {launchbo1} +name {usernamecachelaunch} -lan", cwd=plutoniumfold)
-                    stdout, stderr = p.communicate()
-                else:
-                    error_t5()
-            else:
-                error_pluto()
-        else:
-            error_name()
+        mapexecon = f'"{mapexe}"'
+        modfoldercon = f'"{modfolder}"'
+        modfoldercontemp = f'"{modfolder}/TEMP"'
+        modfolderFileName = os.path.join(modfolder, fileName.replace(" ", "_"))
+        sevz = rf'"{os.getcwd()}\7z\7z.exe"'
         
-    elif event == 'Launch T6':
-        write2config()
-        if values['usernamecache7'] != "":
-            
-            if os.path.exists(values['pluto7'] + "/bin/plutonium-bootstrapper-win32.exe"):
-                
-                if os.path.isfile(values['bo27'] + "/zone/all/base.ipak"):
-                    
-                    if values['multiplayer'] == True:
-                        t_arg = "t6mp"
-                    if values['multiplayer'] == False:
-                        t_arg = "t6zm"
-                    bo2 = values['bo27']
-                    usernamecache = values['usernamecache7']
-                    launchbo2 = fr'"{bo2}"'
-                    usernamecachelaunch = fr'"{usernamecache}"'
-                    p = subprocess.Popen(rf"{plutoniumfold + exe_path} {t_arg} {launchbo2} +name {usernamecachelaunch} -lan", cwd=plutoniumfold)
-                    stdout, stderr = p.communicate()
-                else:
-                    error_t6()
-            else:
-                error_pluto()
+
+        if not os.path.exists(modfolder + "/TEMP"):
+            os.mkdir(modfolder + "/TEMP")
         else:
-            error_name()
+            shutil.rmtree(modfolder + "/TEMP")
+            os.mkdir(modfolder + "/TEMP")
 
 
-    elif event == 'Launch IW5':
-        write2config()
-        if values['usernamecache7'] != "":
-            
-            if os.path.exists(values['pluto7'] + "/bin/plutonium-bootstrapper-win32.exe"):
+        subprocess.Popen(fr'{sevz} x -y -o{modfoldercontemp} {mapexecon}', creationflags=0x00000010, shell=True ,cwd=os.getcwd() + r"/7z").wait()
+
+        if os.path.isfile(modfolder + "/TEMP/mod.ff") or os.path.isdir(modfolder + "/TEMP/scripts") or os.path.isdir(modfolder + "/TEMP/images") or os.path.isdir(modfolder + "/TEMP/maps"):
+            if glob.glob(os.path.join(modfolder, "TEMP", "*.lua")) or glob.glob(os.path.join(modfolder, "TEMP", "*.gsc")):
+                shutil.rmtree(modfolder + "/TEMP")
+                return "not standard mod format"
                 
-                if os.path.isfile(values['iw5'] + "/main/iw_00.iwd"):
-                    t_arg = "iw5mp"
-                  #  if values['multiplayer'] == True:
-                  #      t_arg = "iw5mp"
-                  #  if values['multiplayer'] == False:
-                  #      t_arg = "iw5sp"
-                    iw5 = values['iw5']
-                    usernamecache = values['usernamecache7']
-                    launchiw5 = fr'"{iw5}"'
-                    usernamecachelaunch = fr'"{usernamecache}"'
-                    p = subprocess.Popen(rf"{plutoniumfold + exe_path} {t_arg} {launchiw5} +name {usernamecachelaunch} -lan", cwd=plutoniumfold)
-                    stdout, stderr = p.communicate()
-                else:
-                    error_iw5()
-            else:
-                error_pluto()
-        else:
-            error_name()
-            
-    elif event == 'Help':
-        helpwin()
-        
-    elif event == 'Update':
-        update_winfunc()
+            shutil.rmtree(modfolder + "/TEMP")
 
-    elif event == 'Close':
-        write2config()
-        mainwindow += 1
-        window_main.close()
-        sys.exit()
+            os.mkdir(modfolderFileName)
+            subprocess.Popen(fr'{sevz} x -y -o"{modfolderFileName}" {mapexecon}', creationflags=0x00000010, shell=True ,cwd=os.getcwd() + r"/7z").wait()
+
+            if os.path.exists(modfolder + '/$PLUGINSDIR'):
+                shutil.rmtree(modfolder +  '/$PLUGINSDIR')
+        else:
+            if glob.glob(os.path.join(modfolder, "TEMP", "*", "*.lua")) or glob.glob(os.path.join(modfolder, "TEMP", "*", "*.gsc")):
+                shutil.rmtree(modfolder + "/TEMP")
+                return "not standard mod format"
+                
+            shutil.rmtree(modfolder + "/TEMP")
+            subprocess.Popen(fr'{sevz} x -y -o{modfoldercon} {mapexecon}', creationflags=0x00000010, shell=True ,cwd=os.getcwd() + r"/7z").wait()
+            if os.path.exists(modfolder + '/$PLUGINSDIR'):
+                shutil.rmtree(modfolder +  '/$PLUGINSDIR')
+
+    except Exception as e:
+            print(e)
+            return "failed to install mod"
+    
+    return "standard mod format"
+
+
+
+
+def DownloadMainConfigs(GENERAL, settings):
+    downloadList = [
+                    r"https://raw.githubusercontent.com/xerxes-at/T6ServerConfigs/refs/heads/master/localappdata/Plutonium/storage/t6/gamesettings/conf.cfg",
+                    r"https://raw.githubusercontent.com/xerxes-at/T6ServerConfigs/refs/heads/master/localappdata/Plutonium/storage/t6/gamesettings/ctf.cfg",
+                    r"https://raw.githubusercontent.com/xerxes-at/T6ServerConfigs/refs/heads/master/localappdata/Plutonium/storage/t6/gamesettings/dem.cfg",
+                    r"https://raw.githubusercontent.com/xerxes-at/T6ServerConfigs/refs/heads/master/localappdata/Plutonium/storage/t6/gamesettings/dm.cfg",
+                    r"https://raw.githubusercontent.com/xerxes-at/T6ServerConfigs/refs/heads/master/localappdata/Plutonium/storage/t6/gamesettings/dom.cfg",
+                    r"https://raw.githubusercontent.com/xerxes-at/T6ServerConfigs/refs/heads/master/localappdata/Plutonium/storage/t6/gamesettings/gun.cfg",
+                    r"https://raw.githubusercontent.com/xerxes-at/T6ServerConfigs/refs/heads/master/localappdata/Plutonium/storage/t6/gamesettings/hq.cfg",
+                    r"https://raw.githubusercontent.com/xerxes-at/T6ServerConfigs/refs/heads/master/localappdata/Plutonium/storage/t6/gamesettings/koth.cfg",
+                    r"https://raw.githubusercontent.com/xerxes-at/T6ServerConfigs/refs/heads/master/localappdata/Plutonium/storage/t6/gamesettings/oic.cfg",
+                    r"https://raw.githubusercontent.com/xerxes-at/T6ServerConfigs/refs/heads/master/localappdata/Plutonium/storage/t6/gamesettings/oneflag.cfg",
+                    r"https://raw.githubusercontent.com/xerxes-at/T6ServerConfigs/refs/heads/master/localappdata/Plutonium/storage/t6/gamesettings/sas.cfg",
+                    r"https://raw.githubusercontent.com/xerxes-at/T6ServerConfigs/refs/heads/master/localappdata/Plutonium/storage/t6/gamesettings/sd.cfg",
+                    r"https://raw.githubusercontent.com/xerxes-at/T6ServerConfigs/refs/heads/master/localappdata/Plutonium/storage/t6/gamesettings/shrp.cfg",
+                    r"https://raw.githubusercontent.com/xerxes-at/T6ServerConfigs/refs/heads/master/localappdata/Plutonium/storage/t6/gamesettings/tdm.cfg",
+                    r"https://raw.githubusercontent.com/xerxes-at/T6ServerConfigs/refs/heads/master/localappdata/Plutonium/storage/t6/gamesettings/zm_classic_prison.cfg",
+                    r"https://raw.githubusercontent.com/xerxes-at/T6ServerConfigs/refs/heads/master/localappdata/Plutonium/storage/t6/gamesettings/zm_classic_processing.cfg",
+                    r"https://raw.githubusercontent.com/xerxes-at/T6ServerConfigs/refs/heads/master/localappdata/Plutonium/storage/t6/gamesettings/zm_classic_rooftop.cfg",
+                    r"https://raw.githubusercontent.com/xerxes-at/T6ServerConfigs/refs/heads/master/localappdata/Plutonium/storage/t6/gamesettings/zm_classic_tomb.cfg",
+                    r"https://raw.githubusercontent.com/xerxes-at/T6ServerConfigs/refs/heads/master/localappdata/Plutonium/storage/t6/gamesettings/zm_classic_transit.cfg",
+                    r"https://raw.githubusercontent.com/xerxes-at/T6ServerConfigs/refs/heads/master/localappdata/Plutonium/storage/t6/gamesettings/zm_cleansed_diner.cfg",
+                    r"https://raw.githubusercontent.com/xerxes-at/T6ServerConfigs/refs/heads/master/localappdata/Plutonium/storage/t6/gamesettings/zm_cleansed_street.cfg",
+                    r"https://raw.githubusercontent.com/xerxes-at/T6ServerConfigs/refs/heads/master/localappdata/Plutonium/storage/t6/gamesettings/zm_grief_cellblock.cfg",
+                    r"https://raw.githubusercontent.com/xerxes-at/T6ServerConfigs/refs/heads/master/localappdata/Plutonium/storage/t6/gamesettings/zm_grief_farm.cfg",
+                    r"https://raw.githubusercontent.com/xerxes-at/T6ServerConfigs/refs/heads/master/localappdata/Plutonium/storage/t6/gamesettings/zm_grief_street.cfg",
+                    r"https://raw.githubusercontent.com/xerxes-at/T6ServerConfigs/refs/heads/master/localappdata/Plutonium/storage/t6/gamesettings/zm_grief_town.cfg",
+                    r"https://raw.githubusercontent.com/xerxes-at/T6ServerConfigs/refs/heads/master/localappdata/Plutonium/storage/t6/gamesettings/zm_grief_transit.cfg",
+                    r"https://raw.githubusercontent.com/xerxes-at/T6ServerConfigs/refs/heads/master/localappdata/Plutonium/storage/t6/gamesettings/zm_standard_farm.cfg",
+                    r"https://raw.githubusercontent.com/xerxes-at/T6ServerConfigs/refs/heads/master/localappdata/Plutonium/storage/t6/gamesettings/zm_standard_nuked.cfg",
+                    r"https://raw.githubusercontent.com/xerxes-at/T6ServerConfigs/refs/heads/master/localappdata/Plutonium/storage/t6/gamesettings/zm_standard_town.cfg",
+                    r"https://raw.githubusercontent.com/xerxes-at/T6ServerConfigs/refs/heads/master/localappdata/Plutonium/storage/t6/gamesettings/zm_standard_transit.cfg"]
+
+    
+    destinationList = [
+                    fr"{settings[GENERAL["PLUTONIUMINSTANCE"]]}/storage/t6/gamesettings/conf.cfg",
+                    fr"{settings[GENERAL["PLUTONIUMINSTANCE"]]}/storage/t6/gamesettings/ctf.cfg",
+                    fr"{settings[GENERAL["PLUTONIUMINSTANCE"]]}/storage/t6/gamesettings/dem.cfg",
+                    fr"{settings[GENERAL["PLUTONIUMINSTANCE"]]}/storage/t6/gamesettings/dm.cfg",
+                    fr"{settings[GENERAL["PLUTONIUMINSTANCE"]]}/storage/t6/gamesettings/dom.cfg",
+                    fr"{settings[GENERAL["PLUTONIUMINSTANCE"]]}/storage/t6/gamesettings/gun.cfg",
+                    fr"{settings[GENERAL["PLUTONIUMINSTANCE"]]}/storage/t6/gamesettings/hq.cfg",
+                    fr"{settings[GENERAL["PLUTONIUMINSTANCE"]]}/storage/t6/gamesettings/koth.cfg",
+                    fr"{settings[GENERAL["PLUTONIUMINSTANCE"]]}/storage/t6/gamesettings/oic.cfg",
+                    fr"{settings[GENERAL["PLUTONIUMINSTANCE"]]}/storage/t6/gamesettings/oneflag.cfg",
+                    fr"{settings[GENERAL["PLUTONIUMINSTANCE"]]}/storage/t6/gamesettings/sas.cfg",
+                    fr"{settings[GENERAL["PLUTONIUMINSTANCE"]]}/storage/t6/gamesettings/sd.cfg",
+                    fr"{settings[GENERAL["PLUTONIUMINSTANCE"]]}/storage/t6/gamesettings/shrp.cfg",
+                    fr"{settings[GENERAL["PLUTONIUMINSTANCE"]]}/storage/t6/gamesettings/tdm.cfg",
+                    fr"{settings[GENERAL["PLUTONIUMINSTANCE"]]}/storage/t6/gamesettings/zm_classic_prison.cfg",
+                    fr"{settings[GENERAL["PLUTONIUMINSTANCE"]]}/storage/t6/gamesettings/zm_classic_processing.cfg",
+                    fr"{settings[GENERAL["PLUTONIUMINSTANCE"]]}/storage/t6/gamesettings/zm_classic_rooftop.cfg",
+                    fr"{settings[GENERAL["PLUTONIUMINSTANCE"]]}/storage/t6/gamesettings/zm_classic_tomb.cfg",
+                    fr"{settings[GENERAL["PLUTONIUMINSTANCE"]]}/storage/t6/gamesettings/zm_classic_transit.cfg",
+                    fr"{settings[GENERAL["PLUTONIUMINSTANCE"]]}/storage/t6/gamesettings/zm_cleansed_diner.cfg",
+                    fr"{settings[GENERAL["PLUTONIUMINSTANCE"]]}/storage/t6/gamesettings/zm_cleansed_street.cfg",
+                    fr"{settings[GENERAL["PLUTONIUMINSTANCE"]]}/storage/t6/gamesettings/zm_grief_cellblock.cfg",
+                    fr"{settings[GENERAL["PLUTONIUMINSTANCE"]]}/storage/t6/gamesettings/zm_grief_farm.cfg",
+                    fr"{settings[GENERAL["PLUTONIUMINSTANCE"]]}/storage/t6/gamesettings/zm_grief_street.cfg",
+                    fr"{settings[GENERAL["PLUTONIUMINSTANCE"]]}/storage/t6/gamesettings/zm_grief_town.cfg",
+                    fr"{settings[GENERAL["PLUTONIUMINSTANCE"]]}/storage/t6/gamesettings/zm_grief_transit.cfg",
+                    fr"{settings[GENERAL["PLUTONIUMINSTANCE"]]}/storage/t6/gamesettings/zm_standard_farm.cfg",
+                    fr"{settings[GENERAL["PLUTONIUMINSTANCE"]]}/storage/t6/gamesettings/zm_standard_nuked.cfg",
+                    fr"{settings[GENERAL["PLUTONIUMINSTANCE"]]}/storage/t6/gamesettings/zm_standard_town.cfg",
+                    fr"{settings[GENERAL["PLUTONIUMINSTANCE"]]}/storage/t6/gamesettings/zm_standard_transit.cfg"]
+    try:
+        os.mkdir(fr'{settings[GENERAL["PLUTONIUMINSTANCE"]]}/storage/t6/gamesettings')
+        downloadItems = list(zip(downloadList, destinationList))
+        for downloadUrl, destinationPath in downloadItems:
+            wget.download(downloadUrl, destinationPath)
+        LLW.ErrorWindow(GENERAL, settings, "downloaded main configs")
+    except Exception as e:
+        print(e)       
+
+if __name__ == "__main__":
+    main()
