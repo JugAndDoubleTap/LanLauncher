@@ -40,7 +40,7 @@ def main():
     # output : /games/general/waw/
     
     # sets the version number
-    settings[GENERAL["VERSIONNUM"]] = "2.0.0"
+    settings[GENERAL["VERSIONNUM"]] = "2.0.1"
     # sets default theme
     settings[GENERAL["THEME"]] = "DarkAmber"
 

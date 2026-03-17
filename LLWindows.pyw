@@ -146,9 +146,9 @@ def MainWindow(GENERAL, settings):
 
             case "Launch IW5":
                 if values["multiplayer"] == True:
-                    settings[GENERAL["MODEID"]] = 'IW5mp'
+                    settings[GENERAL["MODEID"]] = 'iw5mp'
                 else:
-                    settings[GENERAL["MODEID"]] = 'IW5mp'
+                    settings[GENERAL["MODEID"]] = 'iw5mp'
 
                 settings[GENERAL["GAMEID"]] = 'Modern Warfare 3'
                 LL.SaveToINI(GENERAL, settings, values)
